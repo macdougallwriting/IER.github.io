@@ -10,8 +10,13 @@ document.addEventListener("DOMContentLoaded", () => {
     nathan: {
       name: "Nathan Chee",
       id: "nathan"
-    }
-  };
+    },
+  
+   alex: {
+    name: "Alex Morgan",
+    id: "alex"
+  }
+};
 
   let currentMode = "menu";
   let selectedCharacter = null;
@@ -22,7 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Each character has an independent conversation.
   let conversations = {
-    nathan: []
+    nathan: [],
+    alex: []
   };
 
   // =========================
@@ -67,7 +73,7 @@ RRJ INDUSTRIES
 
 Available commands:
 
-ai test
+main repository
 
 Type 'back' anytime to return.
 `);
@@ -95,6 +101,7 @@ CONSCIOUSNESS STORAGE
 Available instances:
 
 - Nathan Chee
+- Alex Morgan
 
 Enter an instance name to establish connection.
 Type 'back' to return.
