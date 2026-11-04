@@ -6,14 +6,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const AI_ENDPOINT =
     "https://ai-terminal-backend.zander0506.workers.dev";
 
-  let essays = {};
-  let currentSubject = null;
+  const characters = {
+    nathan: {
+      name: "Nathan Chee",
+      id: "nathan"
+    }
+  };
+
   let currentMode = "menu";
+  let selectedCharacter = null;
 
   let typingTimeout = null;
-  let isTyping = false;
-  let conversationHistory = [];
   let waitingForAI = false;
+  let requestId = 0;
+
+  // Each character has an independent conversation.
+  let conversations = {
+    nathan: []
+  };
 
   // =========================
   // TYPING SYSTEM
@@ -22,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function typeText(text, speed = 10) {
     if (typingTimeout) clearTimeout(typingTimeout);
 
-    isTyping = true;
     output.textContent = "";
 
     let i = 0;
@@ -32,12 +41,85 @@ document.addEventListener("DOMContentLoaded", () => {
         output.textContent += text.charAt(i);
         i++;
         typingTimeout = setTimeout(type, speed);
-      } else {
-        isTyping = false;
       }
     }
 
     type();
+  }
+
+  // =========================
+  // MAIN MENU
+  // =========================
+
+  function showMenu() {
+    requestId++;
+
+    currentMode = "menu";
+    selectedCharacter = null;
+    waitingForAI = false;
+
+    menuInput.disabled = false;
+    menuInput.placeholder = "Type command + ENTER";
+
+    typeText(`
+INTERNAL ESSENCE REPOSITORY
+RRJ INDUSTRIES
+
+Available commands:
+
+ai test
+
+Type 'back' anytime to return.
+`);
+
+    menuInput.focus();
+  }
+
+  // =========================
+  // CHARACTER SELECTION
+  // =========================
+
+  function showCharacterMenu() {
+    requestId++;
+
+    currentMode = "characterSelect";
+    selectedCharacter = null;
+    waitingForAI = false;
+
+    menuInput.disabled = false;
+    menuInput.placeholder = "Enter instance name + ENTER";
+
+    typeText(`
+CONSCIOUSNESS STORAGE
+
+Available instances:
+
+- Nathan Chee
+
+Enter an instance name to establish connection.
+Type 'back' to return.
+`);
+
+    menuInput.focus();
+  }
+
+  function connectCharacter(character) {
+    selectedCharacter = character;
+    currentMode = "chat";
+
+    menuInput.placeholder = "Enter message + ENTER";
+
+    typeText(`
+Establishing connection...
+Instance identified: ${character.name}
+Connection established.
+
+You are now communicating with ${character.name}.
+
+Type 'back' to disconnect.
+`);
+
+    menuInput.focus();
   }
 
   // =========================
@@ -47,138 +129,75 @@ document.addEventListener("DOMContentLoaded", () => {
   function runCommand(cmd) {
     if (!cmd) return;
 
-    cmd = cmd.trim();
+    const command = cmd.trim().toLowerCase();
 
-    if (cmd.toLowerCase() === "back") {
-      showMenu();
+    if (command === "back") {
+      if (currentMode === "chat") {
+        showCharacterMenu();
+      } else {
+        showMenu();
+      }
+
       return;
     }
 
-    if (currentMode === "ai") {
+    if (currentMode === "chat") {
       sendAIMessage(cmd);
       return;
     }
 
-    if (currentSubject !== null) {
-      const essayName = essays[currentSubject].find(
-        name => name.toLowerCase() === cmd.toLowerCase()
+    if (currentMode === "characterSelect") {
+      const character = Object.values(characters).find(
+        character => character.name.toLowerCase() === command
       );
 
-      if (essayName) {
-        loadEssay(currentSubject, essayName);
+      if (character) {
+        connectCharacter(character);
       } else {
-        typeText("Unknown command\n\nType 'back'");
+        typeText(`
+Unknown instance.
+
+Available instances:
+
+- Nathan Chee
+
+Type 'back' to return.
+`);
       }
 
       return;
     }
 
-    if (cmd.toLowerCase() === "ai test") {
-      enterAIChat();
+    if (command === "ai test") {
+      showCharacterMenu();
       return;
     }
 
-    const subject = Object.keys(essays).find(
-      name => name.toLowerCase() === cmd.toLowerCase()
-    );
-
-    if (subject) {
-      showSubjectMenu(subject);
-    } else {
-      typeText("Unknown command\n\nType 'back'");
-    }
-  }
-
-  // =========================
-  // LOAD ESSAY
-  // =========================
-
-  function loadEssay(subject, essayName) {
-    if (typingTimeout) clearTimeout(typingTimeout);
-
-    isTyping = false;
-    output.textContent = "";
-
-    fetch(`essays/${subject}/${essayName}.txt`)
-      .then(res => {
-        if (!res.ok) throw new Error();
-        return res.text();
-      })
-      .then(text => {
-        currentSubject = subject;
-        currentMode = "essay";
-        displayEssay(text);
-      })
-      .catch(() => {
-        typeText("Error: file not found\n\nType 'back'");
-      });
-  }
-
-  // =========================
-  // DISPLAY ESSAY
-  // =========================
-
-  function displayEssay(text) {
-    output.textContent = "";
-
-    let i = 0;
-    isTyping = true;
-
-    function type() {
-      if (i < text.length) {
-        output.textContent += text.charAt(i);
-        i++;
-        typingTimeout = setTimeout(type, 1);
-      } else {
-        isTyping = false;
-      }
-    }
-
-    type();
+    typeText("Unknown command\n\nType 'back'");
   }
 
   // =========================
   // AI CHAT
   // =========================
 
-  function enterAIChat() {
-    if (typingTimeout) clearTimeout(typingTimeout);
-
-    currentMode = "ai";
-    currentSubject = null;
-    conversationHistory = [];
-    waitingForAI = false;
-
-    typeText(`
-AI TEST TERMINAL
-
-Connection established.
-Model: GLM 4.7 Flash
-
-You are now connected to the AI.
-
-Type a message and press ENTER.
-Type 'back' to disconnect.
-`);
-
-    menuInput.placeholder = "Type message + ENTER";
-    menuInput.focus();
-  }
-
   async function sendAIMessage(message) {
-    if (waitingForAI) return;
+    if (waitingForAI || !selectedCharacter) return;
+
+    const character = selectedCharacter;
+    const history = conversations[character.id];
 
     waitingForAI = true;
-
     menuInput.disabled = true;
 
     output.textContent +=
-      `\n\n> ${message}\n\nAI is thinking...`;
+      `\n\n> ${message}\n\n${character.name} is thinking...`;
 
-    conversationHistory.push({
+    history.push({
       role: "user",
       content: message
     });
+
+    const thisRequest = ++requestId;
 
     try {
       const response = await fetch(AI_ENDPOINT, {
@@ -187,8 +206,9 @@ Type 'back' to disconnect.
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-  messages: conversationHistory
-})
+          characterId: character.id,
+          messages: history
+        })
       });
 
       const data = await response.json();
@@ -201,82 +221,39 @@ Type 'back' to disconnect.
         throw new Error("The AI returned an empty response.");
       }
 
-      conversationHistory.push({
+      if (thisRequest !== requestId) return;
+
+      history.push({
         role: "assistant",
         content: data.reply
       });
 
       output.textContent = output.textContent.replace(
-        "AI is thinking...",
-        `AI:\n${data.reply}`
+        `${character.name} is thinking...`,
+        `${character.name}:\n${data.reply}`
       );
 
       output.textContent += "\n\n";
 
     } catch (error) {
+      if (thisRequest !== requestId) return;
+
+      history.pop();
+
       output.textContent = output.textContent.replace(
-        "AI is thinking...",
+        `${character.name} is thinking...`,
         `ERROR: ${error.message}`
       );
 
       output.textContent += "\n\n";
 
-      // Remove the failed message from conversation history.
-      conversationHistory.pop();
+    } finally {
+      if (thisRequest === requestId) {
+        waitingForAI = false;
+        menuInput.disabled = false;
+        menuInput.focus();
+      }
     }
-
-    waitingForAI = false;
-    menuInput.disabled = false;
-    menuInput.focus();
-  }
-
-  // =========================
-  // MENUS
-  // =========================
-
-  function showMenu() {
-    if (typingTimeout) clearTimeout(typingTimeout);
-
-    currentSubject = null;
-    currentMode = "menu";
-    waitingForAI = false;
-    conversationHistory = [];
-
-    menuInput.disabled = false;
-    menuInput.placeholder = "Type command + ENTER";
-
-    typeText(`
-IER TERMINAL
-
-Commands:
-
-${Object.keys(essays).join("\n")}
-
-ai test
-
-Type 'back' anytime to return here
-`);
-
-    menuInput.focus();
-  }
-
-  function showSubjectMenu(subject) {
-    currentSubject = subject;
-    currentMode = "subject";
-
-    const list = essays[subject].join("\n- ");
-
-    typeText(`
-${subject.toUpperCase()}
-
-Type one of the following:
-
-- ${list}
-
-Type 'back' to return
-`);
-
-    menuInput.focus();
   }
 
   // =========================
@@ -302,32 +279,23 @@ Welcome, user.
   }
 
   // =========================
-  // LOAD JSON INDEX
-  // =========================
-
-  fetch("essays/index.json")
-    .then(res => res.json())
-    .then(data => {
-      essays = data;
-      bootSequence();
-    })
-    .catch(() => {
-      output.textContent = "Failed to load essays index.";
-    });
-
-  // =========================
   // ESC KEY
   // =========================
 
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") {
       e.preventDefault();
-      showMenu();
+
+      if (currentMode === "chat") {
+        showCharacterMenu();
+      } else {
+        showMenu();
+      }
     }
   });
 
   // =========================
-  // MENU / CHAT INPUT
+  // TERMINAL INPUT
   // =========================
 
   menuInput.addEventListener("keydown", e => {
@@ -343,5 +311,10 @@ Welcome, user.
     }
   });
 
+  // =========================
+  // START
+  // =========================
+
   menuInput.focus();
+  bootSequence();
 });
