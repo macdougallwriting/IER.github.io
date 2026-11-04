@@ -246,7 +246,7 @@ Type 'back' to disconnect.
     menuInput.placeholder = "Type command + ENTER";
 
     typeText(`
-PORTFOLIO TERMINAL
+IER TERMINAL
 
 Commands:
 
