@@ -25,12 +25,48 @@ document.addEventListener("DOMContentLoaded", () => {
   let waitingForAI = false;
   let requestId = 0;
 
-  // Each character has an independent conversation.
-  let conversations = {
-    nathan: [],
-    alex: []
-  };
+// PERSISTENT CONVERSATION STORAGE
+const STORAGE_KEY = "essence_repository_conversations";
+const MAX_MESSAGES = 100;
 
+function loadConversations() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const loaded = {};
+
+    // Automatically create a history for every character.
+    Object.keys(characters).forEach(id => {
+      const history = Array.isArray(saved[id]) ? saved[id] : [];
+
+      loaded[id] = history
+        .filter(message =>
+          ["user", "assistant"].includes(message.role) &&
+          typeof message.content === "string"
+        )
+        .slice(-MAX_MESSAGES);
+    });
+
+    return loaded;
+
+  } catch (error) {
+    console.warn("Could not load saved conversations:", error);
+    return {};
+  }
+}
+
+let conversations = loadConversations();
+
+// Save all character conversations to browser storage.
+function saveConversations() {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(conversations)
+    );
+  } catch (error) {
+    console.warn("Could not save conversations:", error);
+  }
+}
   // =========================
   // TYPING SYSTEM
   // =========================
@@ -199,10 +235,13 @@ Type 'back' to return.
     output.textContent +=
       `\n\n> ${message}\n\n${character.name} is thinking...`;
 
-    history.push({
-      role: "user",
-      content: message
-    });
+    history.push({ role: "user", content: message });
+
+if (history.length > MAX_MESSAGES) {
+  history.splice(0, history.length - MAX_MESSAGES);
+}
+
+saveConversations();
 
     const thisRequest = ++requestId;
 
@@ -230,10 +269,13 @@ Type 'back' to return.
 
       if (thisRequest !== requestId) return;
 
-      history.push({
-        role: "assistant",
-        content: data.reply
-      });
+      history.push({ role: "assistant", content: data.reply });
+
+if (history.length > MAX_MESSAGES) {
+  history.splice(0, history.length - MAX_MESSAGES);
+}
+
+saveConversations();
 
       output.textContent = output.textContent.replace(
         `${character.name} is thinking...`,
@@ -246,6 +288,7 @@ Type 'back' to return.
       if (thisRequest !== requestId) return;
 
       history.pop();
+saveConversations();
 
       output.textContent = output.textContent.replace(
         `${character.name} is thinking...`,
