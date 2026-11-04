@@ -168,7 +168,7 @@ Type 'back' to return.
       return;
     }
 
-    if (command === "ai test") {
+    if (command === "main repository") {
       showCharacterMenu();
       return;
     }
