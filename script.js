@@ -6,17 +6,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const AI_ENDPOINT =
     "https://ai-terminal-backend.zander0506.workers.dev";
 
+  // =========================
+  // CHARACTER DATABASE
+  // =========================
+
   const characters = {
     nathan: {
       name: "Nathan Chee",
       id: "nathan"
     },
-  
-   alex: {
-    name: "Alex Morgan",
-    id: "alex"
-  }
-};
+
+    alex: {
+      name: "Alex Morgan",
+      id: "alex"
+    }
+  };
 
   let currentMode = "menu";
   let selectedCharacter = null;
@@ -25,48 +29,64 @@ document.addEventListener("DOMContentLoaded", () => {
   let waitingForAI = false;
   let requestId = 0;
 
-// PERSISTENT CONVERSATION STORAGE
-const STORAGE_KEY = "essence_repository_conversations";
-const MAX_MESSAGES = 100;
+  // =========================
+  // PERSISTENT CONVERSATIONS
+  // =========================
 
-function loadConversations() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    const loaded = {};
+  const STORAGE_KEY = "essence_repository_conversations";
+  const MAX_MESSAGES = 100;
 
-    // Automatically create a history for every character.
-    Object.keys(characters).forEach(id => {
-      const history = Array.isArray(saved[id]) ? saved[id] : [];
+  function loadConversations() {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || "{}"
+      );
 
-      loaded[id] = history
-        .filter(message =>
-          ["user", "assistant"].includes(message.role) &&
-          typeof message.content === "string"
-        )
-        .slice(-MAX_MESSAGES);
-    });
+      const loaded = {};
 
-    return loaded;
+      Object.keys(characters).forEach(id => {
+        const history = Array.isArray(saved[id])
+          ? saved[id]
+          : [];
 
-  } catch (error) {
-    console.warn("Could not load saved conversations:", error);
-    return {};
+        loaded[id] = history
+          .filter(message =>
+            message &&
+            ["user", "assistant"].includes(message.role) &&
+            typeof message.content === "string"
+          )
+          .slice(-MAX_MESSAGES);
+      });
+
+      return loaded;
+
+    } catch (error) {
+      console.warn("Could not load saved conversations:", error);
+
+      const empty = {};
+
+      Object.keys(characters).forEach(id => {
+        empty[id] = [];
+      });
+
+      return empty;
+    }
   }
-}
 
-let conversations = loadConversations();
+  let conversations = loadConversations();
 
-// Save all character conversations to browser storage.
-function saveConversations() {
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(conversations)
-    );
-  } catch (error) {
-    console.warn("Could not save conversations:", error);
+  function saveConversations() {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(conversations)
+      );
+
+    } catch (error) {
+      console.warn("Could not save conversations:", error);
+    }
   }
-}
+
   // =========================
   // TYPING SYSTEM
   // =========================
@@ -131,13 +151,16 @@ Type 'back' anytime to return.
     menuInput.disabled = false;
     menuInput.placeholder = "Enter instance name + ENTER";
 
+    const characterList = Object.values(characters)
+      .map(character => `- ${character.name}`)
+      .join("\n");
+
     typeText(`
 CONSCIOUSNESS STORAGE
 
 Available instances:
 
-- Nathan Chee
-- Alex Morgan
+${characterList}
 
 Enter an instance name to establish connection.
 Type 'back' to return.
@@ -146,16 +169,26 @@ Type 'back' to return.
     menuInput.focus();
   }
 
+  // =========================
+  // CONNECT TO CHARACTER
+  // =========================
+
   function connectCharacter(character) {
     selectedCharacter = character;
     currentMode = "chat";
 
     menuInput.placeholder = "Enter message + ENTER";
 
+    const history = conversations[character.id] || [];
+
     typeText(`
 Establishing connection...
 Instance identified: ${character.name}
 Connection established.
+
+${history.length > 0
+  ? `Previous conversation restored (${history.length} messages).`
+  : "No previous conversation found."}
 
 You are now communicating with ${character.name}.
 
@@ -197,12 +230,16 @@ Type 'back' to disconnect.
       if (character) {
         connectCharacter(character);
       } else {
+        const characterList = Object.values(characters)
+          .map(character => `- ${character.name}`)
+          .join("\n");
+
         typeText(`
 Unknown instance.
 
 Available instances:
 
-- Nathan Chee
+${characterList}
 
 Type 'back' to return.
 `);
@@ -235,13 +272,18 @@ Type 'back' to return.
     output.textContent +=
       `\n\n> ${message}\n\n${character.name} is thinking...`;
 
-    history.push({ role: "user", content: message });
+    // Save user message.
+    history.push({
+      role: "user",
+      content: message
+    });
 
-if (history.length > MAX_MESSAGES) {
-  history.splice(0, history.length - MAX_MESSAGES);
-}
+    // Enforce message limit.
+    if (history.length > MAX_MESSAGES) {
+      history.splice(0, history.length - MAX_MESSAGES);
+    }
 
-saveConversations();
+    saveConversations();
 
     const thisRequest = ++requestId;
 
@@ -269,13 +311,18 @@ saveConversations();
 
       if (thisRequest !== requestId) return;
 
-      history.push({ role: "assistant", content: data.reply });
+      // Save AI response.
+      history.push({
+        role: "assistant",
+        content: data.reply
+      });
 
-if (history.length > MAX_MESSAGES) {
-  history.splice(0, history.length - MAX_MESSAGES);
-}
+      // Enforce message limit again.
+      if (history.length > MAX_MESSAGES) {
+        history.splice(0, history.length - MAX_MESSAGES);
+      }
 
-saveConversations();
+      saveConversations();
 
       output.textContent = output.textContent.replace(
         `${character.name} is thinking...`,
@@ -288,7 +335,7 @@ saveConversations();
       if (thisRequest !== requestId) return;
 
       history.pop();
-saveConversations();
+      saveConversations();
 
       output.textContent = output.textContent.replace(
         `${character.name} is thinking...`,
