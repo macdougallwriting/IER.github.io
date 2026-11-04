@@ -1,0 +1,91 @@
+/* =========================
+   GLOBAL BODY
+========================= */
+body {
+  background: black;
+  color: #00ff00;
+  font-family: monospace;
+  padding: 20px;
+}
+
+/* =========================
+   TERMINAL CONTAINER
+========================= */
+#terminal {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+
+/* =========================
+   OUTPUT AREA
+========================= */
+#output {
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+
+/* FIXED: consistent cross-browser wrapping */
+#output pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;   /* 🔥 key Firefox fix */
+  word-break: break-word;
+  margin: 10px 0;
+}
+
+/* blinking cursor for output only */
+#output::after {
+  content: "_";
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0; }
+}
+
+/* =========================
+   INPUT LINE (menu input at bottom)
+========================= */
+#inputLine {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* =========================
+   PROMPT SYMBOL
+========================= */
+.prompt {
+  font-weight: bold;
+}
+
+/* =========================
+   ALL INPUTS (menu & essay)
+========================= */
+input.commandInput {
+  background: black;
+  color: #00ff00;
+  border: none;
+  outline: none;
+  font-family: monospace;
+  font-size: 18px;
+  width: 100%;
+  padding: 0;
+  margin: 5px 0;
+}
+
+/* Placeholder styling */
+input.commandInput::placeholder {
+  color: #00ff00;
+  opacity: 0.5;
+}
+
+/* Essay input lines */
+.inputLineEssay {
+  display: flex;
+  gap: 8px;
+  margin: 5px 0;
+  align-items: center;
+}
