@@ -22,9 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
     character06: { name: "Character 06", id: "character06", level: 1 },
 
     // Level 1 key holder: unlocks Level 2
-    character07: {
-      name: "Character 07",
-      id: "character07",
+    alex: {
+      name: "Alex Morgan",
+      id: "alex",
       level: 1,
       keyHolderFor: 2
     },
