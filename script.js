@@ -202,9 +202,7 @@ Available commands:
 
 main repository
 
-Enter a password to unlock restricted archives.
-
-Type 'back' anytime to return.
+back
 `);
 
     menuInput.focus();
@@ -235,17 +233,16 @@ Type 'back' anytime to return.
       .join("\n");
 
     typeText(`
-CONSCIOUSNESS STORAGE
+STORAGE
 
 ACCESS LEVEL: ${unlockedLevel}
 
-Available instances:
+Available:
 
 ${characterList}
 
-Enter an instance name to establish connection.
+Enter name to establish connection.
 
-Enter a password to unlock additional archives.
 Type 'back' to return.
 `);
 
@@ -349,8 +346,6 @@ CREDENTIALS ACCEPTED.
 Restricted archive access granted.
 
 New access level: ${unlockedLevel}
-
-Additional consciousness instances are now available.
 
 Type 'main repository' to view available instances.
 `);
