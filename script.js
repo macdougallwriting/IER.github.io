@@ -11,75 +11,61 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
 
   const characters = {
-    nathan: {
-      name: "Nathan Chee",
-      id: "nathan"
-    },
+    nathan: { name: "Nathan Chee", id: "nathan", level: 1 },
+    alex: { name: "Alex Morgan", id: "alex", level: 1 },
 
-    alex: {
-      name: "Alex Morgan",
-      id: "alex"
-    },
+    character01: { name: "Character 01", id: "character01", level: 1 },
+    character02: { name: "Character 02", id: "character02", level: 1 },
+    character03: { name: "Character 03", id: "character03", level: 1 },
+    character04: { name: "Character 04", id: "character04", level: 1 },
+    character05: { name: "Character 05", id: "character05", level: 1 },
+    character06: { name: "Character 06", id: "character06", level: 1 },
 
-    character01: {
-      name: "Character 01",
-      id: "character01"
-    },
-
-    character02: {
-      name: "Character 02",
-      id: "character02"
-    },
-
-    character03: {
-      name: "Character 03",
-      id: "character03"
-    },
-
-    character04: {
-      name: "Character 04",
-      id: "character04"
-    },
-
-    character05: {
-      name: "Character 05",
-      id: "character05"
-    },
-
-    character06: {
-      name: "Character 06",
-      id: "character06"
-    },
-
+    // Level 1 key holder: unlocks Level 2
     character07: {
       name: "Character 07",
-      id: "character07"
+      id: "character07",
+      level: 1,
+      keyHolderFor: 2
     },
 
-    character08: {
-      name: "Character 08",
-      id: "character08"
+    character08: { name: "Character 08", id: "character08", level: 1 },
+    character09: { name: "Character 09", id: "character09", level: 1 },
+    character10: { name: "Character 10", id: "character10", level: 1 },
+    character11: { name: "Character 11", id: "character11", level: 1 },
+    character12: { name: "Character 12", id: "character12", level: 1 },
+
+    // Level 2
+    character13: { name: "Character 13", id: "character13", level: 2 },
+    character14: { name: "Character 14", id: "character14", level: 2 },
+    character15: { name: "Character 15", id: "character15", level: 2 },
+
+    // Level 2 key holder: unlocks Level 3
+    character16: {
+      name: "Character 16",
+      id: "character16",
+      level: 2,
+      keyHolderFor: 3
     },
 
-    character09: {
-      name: "Character 09",
-      id: "character09"
+    character17: { name: "Character 17", id: "character17", level: 2 },
+    character18: { name: "Character 18", id: "character18", level: 2 },
+
+    // Level 3
+    character19: { name: "Character 19", id: "character19", level: 3 },
+
+    // Level 3 key holder: unlocks Level 4
+    character20: {
+      name: "Character 20",
+      id: "character20",
+      level: 3,
+      keyHolderFor: 4
     },
 
-    character10: {
-      name: "Character 10",
-      id: "character10"
-    },
+    character21: { name: "Character 21", id: "character21", level: 3 },
 
-    character11: {
-      name: "Character 11",
-      id: "character11"
-    },
-
-    character12: {
-      name: "Character 12",
-      id: "character12"
-    }
+    // Level 4
+    character22: { name: "Character 22", id: "character22", level: 4 }
   };
 
   let currentMode = "menu";
@@ -90,11 +76,36 @@ document.addEventListener("DOMContentLoaded", () => {
   let requestId = 0;
 
   // =========================
-  // PERSISTENT CONVERSATIONS
+  // STORAGE
   // =========================
 
   const STORAGE_KEY = "essence_repository_conversations";
+  const PROGRESS_KEY = "essence_repository_progress";
+
   const MAX_MESSAGES = 100;
+
+  function getUnlockedLevel() {
+    try {
+      const saved = Number(localStorage.getItem(PROGRESS_KEY) || 1);
+      return Math.min(4, Math.max(1, saved));
+    } catch {
+      return 1;
+    }
+  }
+
+  let unlockedLevel = getUnlockedLevel();
+
+  function saveProgress() {
+    try {
+      localStorage.setItem(PROGRESS_KEY, String(unlockedLevel));
+    } catch (error) {
+      console.warn("Could not save progression:", error);
+    }
+  }
+
+  // =========================
+  // PERSISTENT CONVERSATIONS
+  // =========================
 
   function loadConversations() {
     try {
@@ -141,7 +152,6 @@ document.addEventListener("DOMContentLoaded", () => {
         STORAGE_KEY,
         JSON.stringify(conversations)
       );
-
     } catch (error) {
       console.warn("Could not save conversations:", error);
     }
@@ -192,6 +202,8 @@ Available commands:
 
 main repository
 
+Enter a password to unlock restricted archives.
+
 Type 'back' anytime to return.
 `);
 
@@ -202,6 +214,12 @@ Type 'back' anytime to return.
   // CHARACTER SELECTION
   // =========================
 
+  function getAvailableCharacters() {
+    return Object.values(characters).filter(
+      character => character.level <= unlockedLevel
+    );
+  }
+
   function showCharacterMenu() {
     requestId++;
 
@@ -210,20 +228,24 @@ Type 'back' anytime to return.
     waitingForAI = false;
 
     menuInput.disabled = false;
-    menuInput.placeholder = "Enter instance name + ENTER";
+    menuInput.placeholder = "Enter instance name or password + ENTER";
 
-    const characterList = Object.values(characters)
+    const characterList = getAvailableCharacters()
       .map(character => `- ${character.name}`)
       .join("\n");
 
     typeText(`
 CONSCIOUSNESS STORAGE
 
+ACCESS LEVEL: ${unlockedLevel}
+
 Available instances:
 
 ${characterList}
 
 Enter an instance name to establish connection.
+
+Enter a password to unlock additional archives.
 Type 'back' to return.
 `);
 
@@ -235,6 +257,11 @@ Type 'back' to return.
   // =========================
 
   function connectCharacter(character) {
+    if (character.level > unlockedLevel) {
+      typeText("ACCESS DENIED.");
+      return;
+    }
+
     selectedCharacter = character;
     currentMode = "chat";
 
@@ -260,11 +287,99 @@ Type 'back' to disconnect.
   }
 
   // =========================
+  // PASSWORD VERIFICATION
+  // =========================
+
+  async function unlockAccess(password) {
+    if (waitingForAI) return;
+
+    if (!password.trim()) return;
+
+    waitingForAI = true;
+    menuInput.disabled = true;
+
+    const thisRequest = ++requestId;
+
+    output.textContent =
+      "Verifying credentials...\n";
+
+    try {
+      const response = await fetch(AI_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          action: "unlock",
+          password: password.trim()
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Invalid password.");
+      }
+
+      if (thisRequest !== requestId) return;
+
+      const newLevel = Number(data.unlockedLevel);
+
+      if (
+        !Number.isInteger(newLevel) ||
+        newLevel < 2 ||
+        newLevel > 4
+      ) {
+        throw new Error("Invalid access level returned by server.");
+      }
+
+      if (newLevel <= unlockedLevel) {
+        typeText(`
+ACCESS ALREADY GRANTED.
+
+Current access level: ${unlockedLevel}
+`);
+      } else {
+        unlockedLevel = newLevel;
+        saveProgress();
+
+        typeText(`
+CREDENTIALS ACCEPTED.
+
+Restricted archive access granted.
+
+New access level: ${unlockedLevel}
+
+Additional consciousness instances are now available.
+
+Type 'main repository' to view available instances.
+`);
+      }
+
+    } catch (error) {
+      if (thisRequest !== requestId) return;
+
+      typeText(`
+ACCESS DENIED.
+
+${error.message}
+`);
+
+    } finally {
+      if (thisRequest === requestId) {
+        waitingForAI = false;
+        menuInput.disabled = false;
+        menuInput.focus();
+      }
+    }
+  }
+
+  // =========================
   // COMMAND HANDLER
   // =========================
 
   function runCommand(cmd) {
-    if (!cmd) return;
+    if (!cmd.trim()) return;
 
     const command = cmd.trim().toLowerCase();
 
@@ -283,36 +398,36 @@ Type 'back' to disconnect.
       return;
     }
 
+    if (command === "main repository") {
+      showCharacterMenu();
+      return;
+    }
+
+    // Explicit password command.
+    if (command.startsWith("unlock ")) {
+      const password = cmd.trim().slice(7).trim();
+
+      unlockAccess(password);
+      return;
+    }
+
     if (currentMode === "characterSelect") {
-      const character = Object.values(characters).find(
+      const character = getAvailableCharacters().find(
         character => character.name.toLowerCase() === command
       );
 
       if (character) {
         connectCharacter(character);
       } else {
-        typeText(`
-Unknown instance.
-
-Available instances:
-
-${Object.values(characters)
-  .map(character => `- ${character.name}`)
-  .join("\n")}
-
-Type 'back' to return.
-`);
+        // Also allow a password to be entered directly.
+        unlockAccess(cmd.trim());
       }
 
       return;
     }
 
-    if (command === "main repository") {
-      showCharacterMenu();
-      return;
-    }
-
-    typeText("Unknown command\n\nType 'back'");
+    // Allow direct password entry at the main menu.
+    unlockAccess(cmd.trim());
   }
 
   // =========================
@@ -331,13 +446,11 @@ Type 'back' to return.
     output.textContent +=
       `\n\n> ${message}\n\n${character.name} is thinking...`;
 
-    // Save user message.
     history.push({
       role: "user",
       content: message
     });
 
-    // Enforce message limit.
     if (history.length > MAX_MESSAGES) {
       history.splice(0, history.length - MAX_MESSAGES);
     }
@@ -370,13 +483,11 @@ Type 'back' to return.
 
       if (thisRequest !== requestId) return;
 
-      // Save AI response.
       history.push({
         role: "assistant",
         content: data.reply
       });
 
-      // Enforce message limit again.
       if (history.length > MAX_MESSAGES) {
         history.splice(0, history.length - MAX_MESSAGES);
       }
