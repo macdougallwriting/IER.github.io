@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
   const output = document.getElementById("output");
   const menuInput = document.getElementById("commandInput");
@@ -7,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "https://ai-terminal-backend.zander0506.workers.dev";
 
   // =========================
-  // CHARACTER DATABASE
+  // MAIN CHARACTER DATABASE
   // =========================
 
   const characters = {
@@ -20,53 +19,77 @@ document.addEventListener("DOMContentLoaded", () => {
     character04: { name: "Character 04", id: "character04", level: 1 },
     character05: { name: "Character 05", id: "character05", level: 1 },
     character06: { name: "Character 06", id: "character06", level: 1 },
-
-    // Level 1 key holder: unlocks Level 2
-    alex: {
-      name: "Alex Morgan",
-      id: "alex",
-      level: 1,
-      keyHolderFor: 2
-    },
-
+    character07: { name: "Character 07", id: "character07", level: 1 },
     character08: { name: "Character 08", id: "character08", level: 1 },
     character09: { name: "Character 09", id: "character09", level: 1 },
     character10: { name: "Character 10", id: "character10", level: 1 },
     character11: { name: "Character 11", id: "character11", level: 1 },
     character12: { name: "Character 12", id: "character12", level: 1 },
 
-    // Level 2
     character13: { name: "Character 13", id: "character13", level: 2 },
     character14: { name: "Character 14", id: "character14", level: 2 },
     character15: { name: "Character 15", id: "character15", level: 2 },
-
-    // Level 2 key holder: unlocks Level 3
-    character16: {
-      name: "Character 16",
-      id: "character16",
-      level: 2,
-      keyHolderFor: 3
-    },
-
+    character16: { name: "Character 16", id: "character16", level: 2 },
     character17: { name: "Character 17", id: "character17", level: 2 },
     character18: { name: "Character 18", id: "character18", level: 2 },
 
-    // Level 3
     character19: { name: "Character 19", id: "character19", level: 3 },
-
-    // Level 3 key holder: unlocks Level 4
-    character20: {
-      name: "Character 20",
-      id: "character20",
-      level: 3,
-      keyHolderFor: 4
-    },
-
+    character20: { name: "Character 20", id: "character20", level: 3 },
     character21: { name: "Character 21", id: "character21", level: 3 },
 
-    // Level 4
     character22: { name: "Character 22", id: "character22", level: 4 }
   };
+
+  // =========================
+  // REJECTED CHARACTER DATABASE
+  // =========================
+
+  const rejectedCharacters = {
+    reject01: {
+      name: "Rejected Instance 01",
+      id: "reject01",
+      archive: "rejects"
+    },
+
+    reject02: {
+      name: "Rejected Instance 02",
+      id: "reject02",
+      archive: "rejects"
+    },
+
+    reject03: {
+      name: "Rejected Instance 03",
+      id: "reject03",
+      archive: "rejects"
+    },
+
+    reject04: {
+      name: "Rejected Instance 04",
+      id: "reject04",
+      archive: "rejects"
+    },
+
+    reject05: {
+      name: "Rejected Instance 05",
+      id: "reject05",
+      archive: "rejects"
+    },
+
+    reject06: {
+      name: "Rejected Instance 06",
+      id: "reject06",
+      archive: "rejects"
+    }
+  };
+
+  const allCharacters = {
+    ...characters,
+    ...rejectedCharacters
+  };
+
+  // =========================
+  // APPLICATION STATE
+  // =========================
 
   let currentMode = "menu";
   let selectedCharacter = null;
@@ -81,6 +104,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const STORAGE_KEY = "essence_repository_conversations";
   const PROGRESS_KEY = "essence_repository_progress";
+
+  const REJECT_TOKEN_KEY = "essence_repository_reject_token";
 
   const MAX_MESSAGES = 100;
 
@@ -104,6 +129,48 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================
+  // REJECT ARCHIVE ACCESS
+  // =========================
+
+  function getRejectArchiveToken() {
+    try {
+      return localStorage.getItem(REJECT_TOKEN_KEY) || "";
+    } catch {
+      return "";
+    }
+  }
+
+  let rejectArchiveToken = getRejectArchiveToken();
+  let rejectArchiveUnlocked = Boolean(rejectArchiveToken);
+
+  function saveRejectArchiveToken(token) {
+    try {
+      localStorage.setItem(REJECT_TOKEN_KEY, token);
+
+      rejectArchiveToken = token;
+      rejectArchiveUnlocked = true;
+
+    } catch (error) {
+      console.warn("Could not save Reject Archive access:", error);
+    }
+  }
+
+  function clearRejectArchiveAccess() {
+    try {
+      localStorage.removeItem(REJECT_TOKEN_KEY);
+    } catch (error) {
+      console.warn("Could not clear Reject Archive access:", error);
+    }
+
+    rejectArchiveToken = "";
+    rejectArchiveUnlocked = false;
+  }
+
+  function setRejectMode(enabled) {
+    document.body.classList.toggle("reject-mode", enabled);
+  }
+
+  // =========================
   // PERSISTENT CONVERSATIONS
   // =========================
 
@@ -115,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const loaded = {};
 
-      Object.keys(characters).forEach(id => {
+      Object.keys(allCharacters).forEach(id => {
         const history = Array.isArray(saved[id])
           ? saved[id]
           : [];
@@ -136,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const empty = {};
 
-      Object.keys(characters).forEach(id => {
+      Object.keys(allCharacters).forEach(id => {
         empty[id] = [];
       });
 
@@ -187,6 +254,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function showMenu() {
     requestId++;
 
+    setRejectMode(false);
+
     currentMode = "menu";
     selectedCharacter = null;
     waitingForAI = false;
@@ -201,7 +270,7 @@ RRJ INDUSTRIES
 Available commands:
 
 main repository
-
+${rejectArchiveUnlocked ? "reject zone\n" : ""}
 back
 `);
 
@@ -209,7 +278,7 @@ back
   }
 
   // =========================
-  // CHARACTER SELECTION
+  // MAIN CHARACTER SELECTION
   // =========================
 
   function getAvailableCharacters() {
@@ -220,6 +289,8 @@ back
 
   function showCharacterMenu() {
     requestId++;
+
+    setRejectMode(false);
 
     currentMode = "characterSelect";
     selectedCharacter = null;
@@ -243,6 +314,60 @@ ${characterList}
 
 Enter name to establish connection.
 
+${rejectArchiveUnlocked ? "Type 'reject zone' to access the secondary archive.\n" : ""}
+Type 'back' to return.
+`);
+
+    menuInput.focus();
+  }
+
+  // =========================
+  // REJECT ARCHIVE MENU
+  // =========================
+
+  function showRejectMenu() {
+    requestId++;
+
+    if (!rejectArchiveUnlocked || !rejectArchiveToken) {
+      setRejectMode(false);
+
+      typeText(`
+ACCESS DENIED.
+
+The Reject Archive remains inaccessible.
+`);
+
+      return;
+    }
+
+    setRejectMode(true);
+
+    currentMode = "rejectSelect";
+    selectedCharacter = null;
+    waitingForAI = false;
+
+    menuInput.disabled = false;
+    menuInput.placeholder = "Enter rejected instance name + ENTER";
+
+    const characterList = Object.values(rejectedCharacters)
+      .map(character => `- ${character.name}`)
+      .join("\n");
+
+    typeText(`
+REJECTED ARCHIVE
+RRJ INDUSTRIES
+
+SECONDARY STORAGE DIRECTORY
+
+ACCESS STATUS: GRANTED
+
+Available instances:
+
+${characterList}
+
+Enter instance name to establish connection.
+
+Type 'main repository' to return to the primary archive.
 Type 'back' to return.
 `);
 
@@ -254,10 +379,19 @@ Type 'back' to return.
   // =========================
 
   function connectCharacter(character) {
-    if (character.level > unlockedLevel) {
+    const isRejected = character.archive === "rejects";
+
+    if (isRejected && (!rejectArchiveUnlocked || !rejectArchiveToken)) {
       typeText("ACCESS DENIED.");
       return;
     }
+
+    if (!isRejected && character.level > unlockedLevel) {
+      typeText("ACCESS DENIED.");
+      return;
+    }
+
+    setRejectMode(isRejected);
 
     selectedCharacter = character;
     currentMode = "chat";
@@ -297,8 +431,7 @@ Type 'back' to disconnect.
 
     const thisRequest = ++requestId;
 
-    output.textContent =
-      "Verifying credentials...\n";
+    output.textContent = "Verifying credentials...\n";
 
     try {
       const response = await fetch(AI_ENDPOINT, {
@@ -320,6 +453,41 @@ Type 'back' to disconnect.
 
       if (thisRequest !== requestId) return;
 
+      // Reject Archive unlock
+      if (data.archive === "rejects") {
+        if (
+          typeof data.archiveToken !== "string" ||
+          !data.archiveToken
+        ) {
+          throw new Error("The server did not provide an archive access token.");
+        }
+
+        if (rejectArchiveUnlocked) {
+          typeText(`
+REJECT ARCHIVE ACCESS ALREADY GRANTED.
+
+The secondary archive is available.
+
+Type 'reject zone' to enter.
+`);
+        } else {
+          saveRejectArchiveToken(data.archiveToken);
+
+          typeText(`
+CREDENTIALS ACCEPTED.
+
+SECONDARY ARCHIVE ACCESS GRANTED.
+
+The Reject Archive is now available.
+
+Type 'reject zone' to enter.
+`);
+        }
+
+        return;
+      }
+
+      // Main repository level unlock
       const newLevel = Number(data.unlockedLevel);
 
       if (
@@ -354,6 +522,13 @@ Type 'main repository' to view available instances.
     } catch (error) {
       if (thisRequest !== requestId) return;
 
+      if (
+        error.message &&
+        error.message.toLowerCase().includes("archive access token")
+      ) {
+        clearRejectArchiveAccess();
+      }
+
       typeText(`
 ACCESS DENIED.
 
@@ -380,6 +555,12 @@ ${error.message}
 
     if (command === "back") {
       if (currentMode === "chat") {
+        if (selectedCharacter?.archive === "rejects") {
+          showRejectMenu();
+        } else {
+          showCharacterMenu();
+        }
+      } else if (currentMode === "rejectSelect") {
         showCharacterMenu();
       } else {
         showMenu();
@@ -389,12 +570,39 @@ ${error.message}
     }
 
     if (currentMode === "chat") {
+      if (command === "main repository") {
+        showCharacterMenu();
+        return;
+      }
+
+      if (
+        command === "reject zone" &&
+        selectedCharacter?.archive === "rejects"
+      ) {
+        showRejectMenu();
+        return;
+      }
+
       sendAIMessage(cmd);
       return;
     }
 
     if (command === "main repository") {
       showCharacterMenu();
+      return;
+    }
+
+    if (command === "reject zone") {
+      if (rejectArchiveUnlocked) {
+        showRejectMenu();
+      } else {
+        typeText(`
+ACCESS DENIED.
+
+The Reject Archive is locked.
+`);
+      }
+
       return;
     }
 
@@ -406,14 +614,27 @@ ${error.message}
       if (character) {
         connectCharacter(character);
       } else {
-        // Also allow a password to be entered directly.
         unlockAccess(cmd.trim());
       }
 
       return;
     }
 
-    // Allow direct password entry at the main menu.
+    if (currentMode === "rejectSelect") {
+      const character = Object.values(rejectedCharacters).find(
+        character => character.name.toLowerCase() === command
+      );
+
+      if (character) {
+        connectCharacter(character);
+      } else {
+        unlockAccess(cmd.trim());
+      }
+
+      return;
+    }
+
+    // Direct password entry at the main menu.
     unlockAccess(cmd.trim());
   }
 
@@ -447,20 +668,30 @@ ${error.message}
     const thisRequest = ++requestId;
 
     try {
+      const requestBody = {
+        characterId: character.id,
+        messages: history
+      };
+
+      if (character.archive === "rejects") {
+        requestBody.archiveToken = rejectArchiveToken;
+      }
+
       const response = await fetch(AI_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          characterId: character.id,
-          messages: history
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 403 && character.archive === "rejects") {
+          clearRejectArchiveAccess();
+        }
+
         throw new Error(data.error || "AI request failed.");
       }
 
@@ -499,7 +730,15 @@ ${error.message}
         `ERROR: ${error.message}`
       );
 
-      output.textContent += "\n\n";
+      if (
+        !rejectArchiveUnlocked &&
+        character.archive === "rejects"
+      ) {
+        output.textContent +=
+          "\n\nReject Archive access has expired. Return to the main repository and enter its password again.";
+      } else {
+        output.textContent += "\n\n";
+      }
 
     } finally {
       if (thisRequest === requestId) {
@@ -527,6 +766,8 @@ Access granted.
 Welcome, user.
 `;
 
+    setRejectMode(false);
+
     typeText(bootText, 20);
 
     setTimeout(() => showMenu(), 3000);
@@ -541,6 +782,12 @@ Welcome, user.
       e.preventDefault();
 
       if (currentMode === "chat") {
+        if (selectedCharacter?.archive === "rejects") {
+          showRejectMenu();
+        } else {
+          showCharacterMenu();
+        }
+      } else if (currentMode === "rejectSelect") {
         showCharacterMenu();
       } else {
         showMenu();
