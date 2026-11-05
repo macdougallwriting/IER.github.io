@@ -19,6 +19,66 @@ document.addEventListener("DOMContentLoaded", () => {
     alex: {
       name: "Alex Morgan",
       id: "alex"
+    },
+
+    character01: {
+      name: "Character 01",
+      id: "character01"
+    },
+
+    character02: {
+      name: "Character 02",
+      id: "character02"
+    },
+
+    character03: {
+      name: "Character 03",
+      id: "character03"
+    },
+
+    character04: {
+      name: "Character 04",
+      id: "character04"
+    },
+
+    character05: {
+      name: "Character 05",
+      id: "character05"
+    },
+
+    character06: {
+      name: "Character 06",
+      id: "character06"
+    },
+
+    character07: {
+      name: "Character 07",
+      id: "character07"
+    },
+
+    character08: {
+      name: "Character 08",
+      id: "character08"
+    },
+
+    character09: {
+      name: "Character 09",
+      id: "character09"
+    },
+
+    character10: {
+      name: "Character 10",
+      id: "character10"
+    },
+
+    character11: {
+      name: "Character 11",
+      id: "character11"
+    },
+
+    character12: {
+      name: "Character 12",
+      id: "character12"
     }
   };
 
@@ -102,6 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (i < text.length) {
         output.textContent += text.charAt(i);
         i++;
+
         typingTimeout = setTimeout(type, speed);
       }
     }
@@ -230,16 +291,14 @@ Type 'back' to disconnect.
       if (character) {
         connectCharacter(character);
       } else {
-        const characterList = Object.values(characters)
-          .map(character => `- ${character.name}`)
-          .join("\n");
-
         typeText(`
 Unknown instance.
 
 Available instances:
 
-${characterList}
+${Object.values(characters)
+  .map(character => `- ${character.name}`)
+  .join("\n")}
 
 Type 'back' to return.
 `);
