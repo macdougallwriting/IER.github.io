@@ -398,14 +398,6 @@ ${error.message}
       return;
     }
 
-    // Explicit password command.
-    if (command.startsWith("unlock ")) {
-      const password = cmd.trim().slice(7).trim();
-
-      unlockAccess(password);
-      return;
-    }
-
     if (currentMode === "characterSelect") {
       const character = getAvailableCharacters().find(
         character => character.name.toLowerCase() === command
