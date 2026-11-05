@@ -1,6 +1,7 @@
 /* =========================
    GLOBAL BODY
 ========================= */
+
 body {
   background: black;
   color: #00ff00;
@@ -11,43 +12,52 @@ body {
 /* =========================
    TERMINAL CONTAINER
 ========================= */
+
 #terminal {
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
 }
 
-
 /* =========================
    OUTPUT AREA
 ========================= */
+
 #output {
   white-space: pre-wrap;
   margin-bottom: 10px;
 }
 
-/* FIXED: consistent cross-browser wrapping */
+/* Consistent cross-browser wrapping */
+
 #output pre {
   white-space: pre-wrap;
-  overflow-wrap: anywhere;   /* 🔥 key Firefox fix */
+  overflow-wrap: anywhere;
   word-break: break-word;
   margin: 10px 0;
 }
 
-/* blinking cursor for output only */
+/* Blinking cursor */
+
 #output::after {
   content: "_";
   animation: blink 1s infinite;
 }
 
 @keyframes blink {
-  0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0; }
+  0%, 50%, 100% {
+    opacity: 1;
+  }
+
+  25%, 75% {
+    opacity: 0;
+  }
 }
 
 /* =========================
-   INPUT LINE (menu input at bottom)
+   INPUT LINE
 ========================= */
+
 #inputLine {
   display: flex;
   gap: 8px;
@@ -57,13 +67,15 @@ body {
 /* =========================
    PROMPT SYMBOL
 ========================= */
+
 .prompt {
   font-weight: bold;
 }
 
 /* =========================
-   ALL INPUTS (menu & essay)
+   ALL INPUTS
 ========================= */
+
 input.commandInput {
   background: black;
   color: #00ff00;
@@ -77,15 +89,65 @@ input.commandInput {
 }
 
 /* Placeholder styling */
+
 input.commandInput::placeholder {
   color: #00ff00;
   opacity: 0.5;
 }
 
 /* Essay input lines */
+
 .inputLineEssay {
   display: flex;
   gap: 8px;
   margin: 5px 0;
   align-items: center;
+}
+
+/* ========================================
+   REJECT ARCHIVE - RED TERMINAL THEME
+======================================== */
+
+/* Main text */
+
+body.reject-mode {
+  color: #ff3333;
+}
+
+/* Output */
+
+body.reject-mode #output {
+  color: #ff3333;
+}
+
+/* Input text */
+
+body.reject-mode input.commandInput {
+  color: #ff3333;
+}
+
+/* Input placeholder */
+
+body.reject-mode input.commandInput::placeholder {
+  color: #ff3333;
+  opacity: 0.5;
+}
+
+/* Prompt symbol */
+
+body.reject-mode .prompt {
+  color: #ff3333;
+}
+
+/* Text selection */
+
+body.reject-mode ::selection {
+  background: #7a0000;
+  color: #ffffff;
+}
+
+/* Optional darker red scrollbar styling */
+
+body.reject-mode {
+  scrollbar-color: #7a2020 black;
 }
