@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     nathan: { name: "Nathan Chee", id: "nathan", level: 1 },
     alex: { name: "Alex Morgan", id: "alex", level: 1 },
 
-    character01: { name: "Character 01", id: "character01", level: 1 },
+    susan: { name: "Susan Fry", id: "susan", level: 1 },
     character02: { name: "Character 02", id: "character02", level: 1 },
     character03: { name: "Character 03", id: "character03", level: 1 },
     character04: { name: "Character 04", id: "character04", level: 1 },
