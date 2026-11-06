@@ -15,29 +15,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     susan: { name: "Susan Fry", id: "susan", level: 1 },
     dmitri: { name: "Dmitri Jansons", id: "dmitri", level: 1 },
-    character03: { name: "Character 03", id: "character03", level: 1 },
-    character04: { name: "Character 04", id: "character04", level: 1 },
-    character05: { name: "Character 05", id: "character05", level: 1 },
-    character06: { name: "Character 06", id: "character06", level: 1 },
-    character07: { name: "Character 07", id: "character07", level: 1 },
-    character08: { name: "Character 08", id: "character08", level: 1 },
-    character09: { name: "Character 09", id: "character09", level: 1 },
-    character10: { name: "Character 10", id: "character10", level: 1 },
-    character11: { name: "Character 11", id: "character11", level: 1 },
-    character12: { name: "Character 12", id: "character12", level: 1 },
+    kevin: { name: "Kevin Atwick", id: "kevin", level: 1 },
+    charlotte: { name: "Charlotte Singh", id: "charlotte", level: 1 },
+    harvey: { name: "Harvey Ellis", id: "harvey", level: 1 },
+    mei: { name: "Han Mei", id: "mei", level: 1 },
+    geoff: { name: "Geoff Parker", id: "geoff", level: 1 },
+    william: { name: "William Tebbet", id: "william", level: 1 },
+    ahmad: { name: "Ahmad Al-Tajir", id: "ahmad", level: 1 },
+    rick: { name: "Rick Emmett", id: "rick", level: 1 },
+    anjolie: { name: "Anjolie Everton", id: "anjolie", level: 1 },
+    kyle: { name: "Kyle Edler", id: "kyle", level: 1 },
 
     character13: { name: "Character 13", id: "character13", level: 2 },
     character14: { name: "Character 14", id: "character14", level: 2 },
     character15: { name: "Character 15", id: "character15", level: 2 },
-    character16: { name: "Character 16", id: "character16", level: 2 },
+    arnold: { name: "Arnold Earhardt", id: "arnold", level: 2 },
     character17: { name: "Character 17", id: "character17", level: 2 },
     character18: { name: "Character 18", id: "character18", level: 2 },
 
     character19: { name: "Character 19", id: "character19", level: 3 },
-    character20: { name: "Character 20", id: "character20", level: 3 },
+    willow: { name: "Willow", id: "willow", level: 3 },
     character21: { name: "Character 21", id: "character21", level: 3 },
 
-    character22: { name: "Character 22", id: "character22", level: 4 }
+    opticon: { name: "Opticon", id: "opticon", level: 4 }
   };
 
   // =========================
@@ -45,9 +45,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
 
   const rejectedCharacters = {
-    reject01: {
-      name: "Rejected Instance 01",
-      id: "reject01",
+    sysfault: {
+      name: "sysfault",
+      id: "sysfault",
       archive: "rejects"
     },
 
